@@ -90,27 +90,46 @@ def tobs():
     
     return jsonify(temps_tobs)
 
+
 @app.route("/api/v1.0/<start>")
-def start_date(start): 
+def start_date(start):
 
-    station_active = (session.query(Measurement.station, func.count(Measurement.station))
-                                .group_by(Measurement.station)
-                                .order_by(func.count(Measurement.station).desc())
-                                .all())
-    most_active_station = station_active[0][0]
+    start_results = session.query(Measurement.date, func.min(Measurement.tobs), 
+                    func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+                    filter(func.strftime("%Y-%m-%d", Measurement.date) >= start).\
+                    group_by(Measurement.date).all()
+    data_dates = []
 
-    temp_stats = session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).\
-                           filter(Measurement.station == most_active_station).all()
+    for results in start_results:
+        data_dates.append({
+            "Date": results[0],
+            "Low Temperature": results[1], 
+            "Average Temperature": results[2],
+            "High Temperature": results[3]
+        })
+    
+    return jsonify(data_dates)
 
-    temp_data = {}
 
-    temp_data[most_active_station] = temp_stats 
+@app.route("/api/v1.0/<start>/<end>")
+def between_dates(start, end):
 
-    return jsonify(temp_data)
+    start_end_results = session.query(Measurement.date, func.min(Measurement.tobs), 
+                    func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+                    filter(func.strftime("%Y-%m-%d", Measurement.date) >= start).\
+                    filter(func.strftime("%Y-%m-%d", Measurement.date) >= end).\
+                    group_by(Measurement.date).all()
+    data_temp_dates = []
 
-
-
-
+    for results in start_end_results:
+        data_temp_dates.append({
+            "Date": results[0],
+            "Low Temperature": results[1], 
+            "Average Temperature": results[2],
+            "High Temperature": results[3]
+        })
+    
+    return jsonify(data_temp_dates)
 
 if __name__ == "__main__":
     app.run(debug=True)
