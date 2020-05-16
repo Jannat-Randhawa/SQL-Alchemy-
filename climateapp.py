@@ -52,9 +52,61 @@ def precipitation():
 
     return jsonify(prcp_dict)
 
+@app.route("/api/v1.0/stations")
+def stations(): 
 
+    station_active = (session.query(Measurement.station, func.count(Measurement.station))
+                                .group_by(Measurement.station)
+                                .order_by(func.count(Measurement.station).desc())
+                                .all())
 
+    station_list = []
 
+    for station in station_active:
+        station_list.append(station[0])
+    
+    return jsonify(station_list)
+
+@app.route("/api/v1.0/tobs")
+def tobs(): 
+    
+    latest_date = (session.query(Measurement.date).order_by(Measurement.date.desc()).first())
+    latest_date = list(np.ravel(latest_date))[0]
+    latest_date = dt.datetime.strptime(latest_date, '%Y-%m-%d')
+
+    query_date = latest_date - dt.timedelta(days=365)
+    
+    results_tobs = session.query(Measurement.tobs, Measurement.date).\
+                            filter(Measurement.date > query_date).\
+                            order_by(Measurement.date).all()
+
+    temps_tobs = []
+
+    for tob, date in results_tobs:
+        temps_tobs.append({
+            "date": date, 
+            "tob": tob
+        })
+    
+    return jsonify(temps_tobs)
+
+@app.route("/api/v1.0/<start>")
+def start_date(start): 
+
+    station_active = (session.query(Measurement.station, func.count(Measurement.station))
+                                .group_by(Measurement.station)
+                                .order_by(func.count(Measurement.station).desc())
+                                .all())
+    most_active_station = station_active[0][0]
+
+    temp_stats = session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).\
+                           filter(Measurement.station == most_active_station).all()
+
+    temp_data = {}
+
+    temp_data[most_active_station] = temp_stats 
+
+    return jsonify(temp_data)
 
 
 
