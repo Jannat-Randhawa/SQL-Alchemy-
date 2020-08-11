@@ -31,7 +31,9 @@ def home():
             f"Here's a list of Available Routes: <br/>"
             f"/api/v1.0/precipitation ~~~~ lists all the precipitation data <br/>"
             f"/api/v1.0/stations ~~~~ lists all the stations <br/>"
-            f"/api/v1.0/tobs ~~~~ lists all the temperature observations data")
+            f"/api/v1.0/tobs ~~~~ lists all the temperature observations data<br/>"
+            f"/api/v1.0/<start> ~~~~~~~~~~~~ lists all the temperature observation for dates greater than and equal to the start date"
+            f"/api/v1.0/<start>/<end> ~~~~~~~~~ list of the minimum temperature, the average temperature, and the max temperature for a given start or start-end range.")
 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
